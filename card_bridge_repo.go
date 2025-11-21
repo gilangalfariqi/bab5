@@ -1,32 +1,40 @@
 package repositories
+
 import (
-"database/sql"
-"mcs_bab_6/entities"
+    "database/sql"
+    "mcs_bab_6/entities"
 )
+
 func GetCards(db *sql.DB) (result []entities.Card, err error) {
-sql := "SELECT * FROM card"
-rows, err := db.Query(sql)
-if err != nil {
-return
+    sqlQuery := "SELECT * FROM card"
+    rows, err := db.Query(sqlQuery)
+    if err != nil {
+        return
+    }
+    defer rows.Close()
+
+    for rows.Next() {
+        var data entities.Card
+
+        err = rows.Scan(&data.ID)
+        if err != nil {
+            return
+        }
+
+        result = append(result, data)
+    }
+
+    return
 }
-defer rows.Close()
-for rows.Next() {
-  var data entities.Card
-err = rows.Scan(&data.ID)
-if err != nil {
-return
-}
-result = append(result, data)
-}
-return
-}
+
 func InsertCard(db *sql.DB, card entities.Card) (err error) {
-sql := "INSERT INTO card(id) values($1)"
-_, err = db.Exec(sql, card.ID)
-return err
+    sqlQuery := "INSERT INTO card(id) VALUES($1)"
+    _, err = db.Exec(sqlQuery, card.ID)
+    return
 }
+
 func DeleteCard(db *sql.DB, card entities.Card) (err error) {
-sql := "DELETE FROM card WHERE id = $1"
-_, err = db.Exec(sql, card.ID)
-return err
+    sqlQuery := "DELETE FROM card WHERE id = $1"
+    _, err = db.Exec(sqlQuery, card.ID)
+    return
 }
