@@ -1,40 +1,29 @@
-package main
+package database
+
 import (
-"database/sql"
-"fmt"
-"log"
-"mcs_bab_6/database"
-  "mcs_bab_6/routers"
-_ "github.com/lib/pq"
-)
-const (
-host = "localhost"
-port = 5432
-user = "postgres"
-password = "" // SESUAIKAN DENGAN PASSWORD
-POSTGRE YANG TELAH DIDAFTARKAN
-dbName = "praktikum_mcs_bab_6" // SESUAIKAN DENGAN NAMA
-DATABASE YANG DIBUAT
-)
-var (
-DB *sql.DB
-err error
-)
-func main() {
-var PORT = ":8080"
-psqlInfo := fmt.Sprintf(
-`host=%s port=%d user=%s password=%s dbname=%s
+    "database/sql"
+    "embed"
+    "fmt"
 
-sslmode=disable`,
-
-host, port, user, password, dbName,
+    migrate "github.com/rubenv/sql-migrate"
 )
-DB, err = sql.Open("postgres", psqlInfo)
-if err != nil {
-log.Fatalf("Error Open DB: %v\n", err)
-}
-database.DBMigrate(DB)
-defer DB.Close()
-routers.StartServer().Run(PORT)
-fmt.Printf("Success Connected")
+
+//go:embed sql_migrations/*.sql
+var dbMigrations embed.FS
+
+var DbConnection *sql.DB
+
+func DBMigrate(dbParam *sql.DB) {
+    migrations := &migrate.EmbedFileSystemMigrationSource{
+        FileSystem: dbMigrations,
+        Root:       "sql_migrations",
+    }
+
+    n, err := migrate.Exec(dbParam, "postgres", migrations, migrate.Up)
+    if err != nil {
+        panic(err)
+    }
+
+    DbConnection = dbParam
+    fmt.Println("Migrations success applied", n, migrations)
 }
