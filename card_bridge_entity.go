@@ -1,4 +1,5 @@
 package entities
+
 type Card struct {
-ID string `json:"id"`
+    ID string `json:"id"`
 }
